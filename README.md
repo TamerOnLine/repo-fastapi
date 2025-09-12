@@ -94,6 +94,7 @@ Once running, open your browser:
 -   <http://localhost:8000/redoc> → ReDoc\
 -   <http://localhost:8000/health> → Health check
 - http://localhost:8000/env
+- http://localhost:8000/plugins
 
 Example request:
 

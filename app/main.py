@@ -5,6 +5,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+
+from app.routes import plugins as plugins_routes
+
 from app.config import get_settings
 
 settings = get_settings()
@@ -42,3 +45,5 @@ def env():
 
 
 # Include routers for CUDA and file uploads
+
+app.include_router(plugins_routes.router, tags=["plugins"])
