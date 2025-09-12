@@ -5,7 +5,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.config import get_settings
 
+settings = get_settings()
 
 # Template and static file paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -33,6 +35,10 @@ def index(request: Request):
 @app.get("/health", response_class=JSONResponse)
 def health():
     return {"status": "ok"}
+
+@app.get("/env", response_class=JSONResponse)
+def env():
+    return settings.summary()
 
 
 # Include routers for CUDA and file uploads
