@@ -18,7 +18,10 @@ os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")  # Optional: silence 
 
 DEVICE = os.getenv("DEVICE", "cuda:0")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> de61936 (start)
 def pick_device() -> torch.device:
     """
     Select a valid device based on the DEVICE environment variable.
@@ -41,7 +44,10 @@ def pick_device() -> torch.device:
 
     return torch.device("cpu")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> de61936 (start)
 def pick_dtype(device: str | None = None) -> torch.dtype:
     """
     Select an appropriate torch dtype based on the selected device.
@@ -66,7 +72,10 @@ def pick_dtype(device: str | None = None) -> torch.dtype:
 
     return torch.float32
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> de61936 (start)
 def cuda_info() -> dict:
     """
     Retrieve CUDA and GPU device information.
@@ -88,7 +97,11 @@ def cuda_info() -> dict:
         info.update(
             {
                 "gpu_name": props.name,
+<<<<<<< HEAD
                 "total_memory_gb": round(props.total_memory / (1024**3), 2),
+=======
+                "total_memory_gb": round(props.total_memory / (1024 ** 3), 2),
+>>>>>>> de61936 (start)
                 "device_index": idx,
                 "driver": getattr(torch.cuda, "driver_version", None),
             }
@@ -96,7 +109,10 @@ def cuda_info() -> dict:
 
     return info
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> de61936 (start)
 def warmup() -> dict:
     """
     Perform a matrix multiplication to warm up the selected device.
@@ -124,4 +140,8 @@ def warmup() -> dict:
         "shape": list(z.shape),
         "elapsed_sec": round(dt, 4),
         "device": str(dev),
+<<<<<<< HEAD
     }
+=======
+    }
+>>>>>>> de61936 (start)
