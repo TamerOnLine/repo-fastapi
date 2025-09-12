@@ -93,6 +93,7 @@ Once running, open your browser:
 -   <http://localhost:8000/docs> → Swagger UI\
 -   <http://localhost:8000/redoc> → ReDoc\
 -   <http://localhost:8000/health> → Health check
+- http://localhost:8000/env
 
 Example request:
 
