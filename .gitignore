@@ -156,6 +156,7 @@ publish_test.py
 venv_switcher.py
 summary_tree.txt
 Dev_requirements.txt
+repo_fast.txt
 *.exe
 *.bak
 *.orig
