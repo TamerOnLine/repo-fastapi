@@ -1,8 +1,7 @@
 from pathlib import Path
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -27,7 +26,7 @@ app = FastAPI(title=settings.APP_NAME)
 # Mount static files directory (from settings)
 app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 
-# Add CORS middleware with settings from config
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ALLOW_ORIGINS,
@@ -36,7 +35,7 @@ app.add_middleware(
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
 )
 
-# Middleware to add a unique request ID to each request
+# Middleware: unique request ID
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         rid = request.headers.get("x-request-id") or uuid.uuid4().hex
@@ -47,7 +46,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RequestIDMiddleware)
 
-# Register custom exception handlers (JSON/HTML negotiation)
+# Register exception handlers
 register_exception_handlers(app)
 
 @app.get("/", response_class=HTMLResponse)
@@ -61,6 +60,10 @@ def health():
 @app.get("/env")
 def env():
     return settings.summary()
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(str(settings.STATIC_DIR / "favicon.ico"))
 
 # Include plugin routes
 app.include_router(plugins_routes.router, tags=["plugins"])
