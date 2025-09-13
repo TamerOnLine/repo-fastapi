@@ -45,39 +45,98 @@ jobs:
       - name: Ensure pip cache dir
         run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
-      - name: Use preinstalled Python 3.12
+      - name: Discover & use Python 3.12 (self-hosted)
         run: |
-          $py = "$env:PY_DIR\python.exe"
-          $pip = "$env:PY_DIR\Scripts\pip.exe"
-          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
+          # 1) Check PY_DIR if already set
+          $candidates = @()
+          if ($env:PY_DIR) { $candidates += $env:PY_DIR }
 
-          # حدّث PATH لهذه الخطوة وللقادم
-          $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
-          "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # 2) Add common installation paths
+          $candidates += @(
+            "R:\tools\python\3.12.10\x64",
+            "R:\tools\python\3.12\x64",
+            "C:\Python312",
+            "C:\Python312\amd64",
+            "$env:LocalAppData\Programs\Python\Python312"
+          )
 
-          & $py --version
-          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
+          $py = $null
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.PIP_CACHE_DIR }}
-          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
-          restore-keys: |
-            pip-
+          # 3) Try Windows py launcher
+          $pyLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
+          if ($pyLauncher) {
+            try {
+              $ver = & py -3.12 -c "import platform;print(platform.python_version())" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $ver) {
+                $dir = & py -3.12 -c "import sys,os;print(os.path.dirname(sys.executable))"
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $dir)) {
+                  $py = Join-Path $dir "python.exe"
+                }
+              }
+            } catch {}
+          }
 
-      - name: Install tooling
-        run: |
-          python -m ensurepip --upgrade
-          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
-          python -m pip install ruff flake8 --cache-dir $env:PIP_CACHE_DIR
+          # 4) Fallback: check candidate folders
+          if (-not $py) {
+            foreach ($root in $candidates | Where-Object { $_ -and (Test-Path $_) }) {
+              $exe = Join-Path $root "python.exe"
+              if (Test-Path $exe) { $py = $exe; break }
+            }
+          }
 
-      - name: Ruff check
-        run: ruff check .
+          # 5) Last resort: search under actions-runner for 3.12
+          if (-not $py -and (Test-Path "R:\actions-runner")) {
+            $found = Get-ChildItem -Path "R:\actions-runner" -Filter "python.exe" -File -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -match "Python\\3\.12" } |
+                    Select-Object -First 1
+            if ($found) { $py = $found.FullName }
+          }
 
-      - name: Flake8
-        run: flake8 .
+          if (-not $py) {
+            Write-Error "Could not locate python.exe (3.12). Install Python 3.12 or set env.PY_DIR correctly."
+            exit 1
+          }
+
+          $pyDir = Split-Path $py -Parent
+          $scriptsDir = Join-Path $pyDir "Scripts"
+
+          # Update PATH for this step
+          $env:PATH = "$pyDir;$scriptsDir;$env:PATH"
+          # Export for future steps
+          $pyDir      | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $scriptsDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PY_DIR=$pyDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Verify and bootstrap pip if needed
+          & "$py" --version
+          & "$py" -m pip --version 2>$null | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Bootstrapping pip..."
+            & "$py" -m ensurepip --upgrade
+            & "$py" -m pip install -U pip wheel setuptools
+          }
+          & "$py" -m pip --version
+
+
+            - name: Cache pip
+              uses: actions/cache@v4
+              with:
+                path: ${{ env.PIP_CACHE_DIR }}
+                key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+                restore-keys: |
+                  pip-
+
+            - name: Install tooling
+              run: |
+                python -m ensurepip --upgrade
+                python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+                python -m pip install ruff flake8 --cache-dir $env:PIP_CACHE_DIR
+
+            - name: Ruff check
+              run: ruff check .
+
+            - name: Flake8
+              run: flake8 .
 
   tests-cpu:
     name: Tests (CPU)
@@ -90,69 +149,129 @@ jobs:
       - name: Ensure pip cache dir
         run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
-      - name: Use preinstalled Python 3.12
+      - name: Discover & use Python 3.12 (self-hosted)
         run: |
-          $py = "$env:PY_DIR\python.exe"
-          $pip = "$env:PY_DIR\Scripts\pip.exe"
-          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
+          # 1) Check PY_DIR if already set
+          $candidates = @()
+          if ($env:PY_DIR) { $candidates += $env:PY_DIR }
 
-          $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
-          "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-          & $py --version
-          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.PIP_CACHE_DIR }}
-          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
-          restore-keys: |
-            pip-
-
-      - name: Install deps
-        run: |
-          python -m ensurepip --upgrade
-          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
-          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
-          if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
-
-      - name: Print Python & Torch info (no-fail)
-        continue-on-error: true
-        run: |
-          $lines = @(
-            'import platform'
-            'print("Python:", platform.python_version())'
-            'try:'
-            '    import torch'
-            '    print("Torch:", getattr(torch, "__version__", "not installed"))'
-            '    ok = hasattr(torch, "cuda") and torch.cuda.is_available()'
-            '    print("CUDA available:", ok)'
-            '    if ok:'
-            '        print("Device count:", torch.cuda.device_count())'
-            'except Exception as e:'
-            '    print("Torch not installed or failed:", e)'
+          # 2) Add common installation paths
+          $candidates += @(
+            "R:\tools\python\3.12.10\x64",
+            "R:\tools\python\3.12\x64",
+            "C:\Python312",
+            "C:\Python312\amd64",
+            "$env:LocalAppData\Programs\Python\Python312"
           )
-          $code = ($lines -join "`n")
-          python -c $code
 
-      - name: Run pytest (CPU-only)
-        env:
-          PYTEST_ADDOPTS: "-q"
-        run: |
-          New-Item -ItemType Directory -Force -Path .\test-logs | Out-Null
-          pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings `
-                 --log-cli-level=INFO `
-                 2>&1 | Tee-Object -FilePath .\test-logs\pytest_cpu.txt
+          $py = $null
 
-      - name: Upload CPU test logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs-cpu
-          path: test-logs/
+          # 3) Try Windows py launcher
+          $pyLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
+          if ($pyLauncher) {
+            try {
+              $ver = & py -3.12 -c "import platform;print(platform.python_version())" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $ver) {
+                $dir = & py -3.12 -c "import sys,os;print(os.path.dirname(sys.executable))"
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $dir)) {
+                  $py = Join-Path $dir "python.exe"
+                }
+              }
+            } catch {}
+          }
+
+          # 4) Fallback: check candidate folders
+          if (-not $py) {
+            foreach ($root in $candidates | Where-Object { $_ -and (Test-Path $_) }) {
+              $exe = Join-Path $root "python.exe"
+              if (Test-Path $exe) { $py = $exe; break }
+            }
+          }
+
+          # 5) Last resort: search under actions-runner for 3.12
+          if (-not $py -and (Test-Path "R:\actions-runner")) {
+            $found = Get-ChildItem -Path "R:\actions-runner" -Filter "python.exe" -File -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -match "Python\\3\.12" } |
+                    Select-Object -First 1
+            if ($found) { $py = $found.FullName }
+          }
+
+          if (-not $py) {
+            Write-Error "Could not locate python.exe (3.12). Install Python 3.12 or set env.PY_DIR correctly."
+            exit 1
+          }
+
+          $pyDir = Split-Path $py -Parent
+          $scriptsDir = Join-Path $pyDir "Scripts"
+
+          # Update PATH for this step
+          $env:PATH = "$pyDir;$scriptsDir;$env:PATH"
+          # Export for future steps
+          $pyDir      | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $scriptsDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PY_DIR=$pyDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Verify and bootstrap pip if needed
+          & "$py" --version
+          & "$py" -m pip --version 2>$null | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Bootstrapping pip..."
+            & "$py" -m ensurepip --upgrade
+            & "$py" -m pip install -U pip wheel setuptools
+          }
+          & "$py" -m pip --version
+
+
+            - name: Cache pip
+              uses: actions/cache@v4
+              with:
+                path: ${{ env.PIP_CACHE_DIR }}
+                key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+                restore-keys: |
+                  pip-
+
+            - name: Install deps
+              run: |
+                python -m ensurepip --upgrade
+                python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+                if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
+                if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
+                if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
+
+            - name: Print Python & Torch info (no-fail)
+              continue-on-error: true
+              run: |
+                $lines = @(
+                  'import platform'
+                  'print("Python:", platform.python_version())'
+                  'try:'
+                  '    import torch'
+                  '    print("Torch:", getattr(torch, "__version__", "not installed"))'
+                  '    ok = hasattr(torch, "cuda") and torch.cuda.is_available()'
+                  '    print("CUDA available:", ok)'
+                  '    if ok:'
+                  '        print("Device count:", torch.cuda.device_count())'
+                  'except Exception as e:'
+                  '    print("Torch not installed or failed:", e)'
+                )
+                $code = ($lines -join "`n")
+                python -c $code
+
+            - name: Run pytest (CPU-only)
+              env:
+                PYTEST_ADDOPTS: "-q"
+              run: |
+                New-Item -ItemType Directory -Force -Path .\test-logs | Out-Null
+                pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings `
+                      --log-cli-level=INFO `
+                      2>&1 | Tee-Object -FilePath .\test-logs\pytest_cpu.txt
+
+            - name: Upload CPU test logs
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                name: logs-cpu
+                path: test-logs/
 
   tests-gpu:
     name: Tests (GPU)
@@ -165,18 +284,78 @@ jobs:
       - name: Ensure pip cache dir
         run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
-      - name: Use preinstalled Python 3.12
+      - name: Discover & use Python 3.12 (self-hosted)
         run: |
-          $py = "$env:PY_DIR\python.exe"
-          $pip = "$env:PY_DIR\Scripts\pip.exe"
-          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
+          # 1) Check PY_DIR if already set
+          $candidates = @()
+          if ($env:PY_DIR) { $candidates += $env:PY_DIR }
 
-          $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
-          "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # 2) Add common installation paths
+          $candidates += @(
+            "R:\tools\python\3.12.10\x64",
+            "R:\tools\python\3.12\x64",
+            "C:\Python312",
+            "C:\Python312\amd64",
+            "$env:LocalAppData\Programs\Python\Python312"
+          )
 
-          & $py --version
-          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
+          $py = $null
+
+          # 3) Try Windows py launcher
+          $pyLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
+          if ($pyLauncher) {
+            try {
+              $ver = & py -3.12 -c "import platform;print(platform.python_version())" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $ver) {
+                $dir = & py -3.12 -c "import sys,os;print(os.path.dirname(sys.executable))"
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $dir)) {
+                  $py = Join-Path $dir "python.exe"
+                }
+              }
+            } catch {}
+          }
+
+          # 4) Fallback: check candidate folders
+          if (-not $py) {
+            foreach ($root in $candidates | Where-Object { $_ -and (Test-Path $_) }) {
+              $exe = Join-Path $root "python.exe"
+              if (Test-Path $exe) { $py = $exe; break }
+            }
+          }
+
+          # 5) Last resort: search under actions-runner for 3.12
+          if (-not $py -and (Test-Path "R:\actions-runner")) {
+            $found = Get-ChildItem -Path "R:\actions-runner" -Filter "python.exe" -File -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -match "Python\\3\.12" } |
+                    Select-Object -First 1
+            if ($found) { $py = $found.FullName }
+          }
+
+          if (-not $py) {
+            Write-Error "Could not locate python.exe (3.12). Install Python 3.12 or set env.PY_DIR correctly."
+            exit 1
+          }
+
+          $pyDir = Split-Path $py -Parent
+          $scriptsDir = Join-Path $pyDir "Scripts"
+
+          # Update PATH for this step
+          $env:PATH = "$pyDir;$scriptsDir;$env:PATH"
+          # Export for future steps
+          $pyDir      | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $scriptsDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PY_DIR=$pyDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Verify and bootstrap pip if needed
+          & "$py" --version
+          & "$py" -m pip --version 2>$null | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Bootstrapping pip..."
+            & "$py" -m ensurepip --upgrade
+            & "$py" -m pip install -U pip wheel setuptools
+          }
+          & "$py" -m pip --version
+
 
       - name: Cache pip
         uses: actions/cache@v4
