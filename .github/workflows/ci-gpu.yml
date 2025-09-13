@@ -126,44 +126,84 @@ jobs:
 
       - name: Discover & use Python 3.12
         run: |
-          # same discovery block as lint (copy-paste or reuse via action)
-          python --version
+          $candidates = @()
+          if ($env:PY_DIR) { $candidates += $env:PY_DIR }
+          $candidates += @(
+            "R:\tools\python\3.12.10\x64",
+            "R:\tools\python\3.12\x64",
+            "C:\Python312",
+            "C:\Python312\amd64",
+            "$env:LocalAppData\Programs\Python\Python312"
+          )
+          $py = $null
+          $pyLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
+          if ($pyLauncher) {
+            try {
+              $ver = & py -3.12 -c "import platform;print(platform.python_version())" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $ver) {
+                $dir = & py -3.12 -c "import sys,os;print(os.path.dirname(sys.executable))"
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $dir)) { $py = Join-Path $dir "python.exe" }
+              }
+            } catch {}
+          }
+          if (-not $py) {
+            foreach ($root in $candidates | Where-Object { $_ -and (Test-Path $_) }) {
+              $exe = Join-Path $root "python.exe"
+              if (Test-Path $exe) { $py = $exe; break }
+            }
+          }
+          if (-not $py -and (Test-Path "R:\actions-runner")) {
+            $found = Get-ChildItem -Path "R:\actions-runner" -Filter "python.exe" -File -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -match "Python\\3\.12" } |
+                    Select-Object -First 1
+            if ($found) { $py = $found.FullName }
+          }
+          if (-not $py) { Write-Error "Python 3.12 not found"; exit 1 }
+          $pyDir = Split-Path $py -Parent
+          $scriptsDir = Join-Path $pyDir "Scripts"
+          $env:PATH = "$pyDir;$scriptsDir;$env:PATH"
+          $pyDir      | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $scriptsDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PY_DIR=$pyDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & "$py" --version
+          & "$py" -m pip --version
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.PIP_CACHE_DIR }}
-          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
-          restore-keys: |
-            pip-
 
-      - name: Install deps
-        run: |
-          python -m ensurepip --upgrade
-          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
-          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
-          if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
+            - name: Cache pip
+              uses: actions/cache@v4
+              with:
+                path: ${{ env.PIP_CACHE_DIR }}
+                key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+                restore-keys: |
+                  pip-
 
-      - name: Print Python & Torch info
-        continue-on-error: true
-        run: |
-          python - << 'PY'
-          import platform, sys
-          print("Python:", platform.python_version())
-          try:
-              import torch
-              print("Torch:", torch.__version__)
-              print("CUDA available:", torch.cuda.is_available())
-              if torch.cuda.is_available():
-                  print("CUDA devices:", torch.cuda.device_count())
-          except Exception as e:
-              print("Torch not installed:", e)
-          PY
+            - name: Install deps
+              run: |
+                python -m ensurepip --upgrade
+                python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+                if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
+                if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
+                if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
 
-      - name: Run pytest (CPU-only)
-        run: |
-          pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings --log-cli-level=INFO
+            - name: Print Python & Torch info
+              continue-on-error: true
+              run: |
+                python - << 'PY'
+                import platform, sys
+                print("Python:", platform.python_version())
+                try:
+                    import torch
+                    print("Torch:", torch.__version__)
+                    print("CUDA available:", torch.cuda.is_available())
+                    if torch.cuda.is_available():
+                        print("CUDA devices:", torch.cuda.device_count())
+                except Exception as e:
+                    print("Torch not installed:", e)
+                PY
+
+            - name: Run pytest (CPU-only)
+              run: |
+                pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings --log-cli-level=INFO
 
   tests-gpu:
     name: Tests (GPU)
@@ -178,8 +218,48 @@ jobs:
 
       - name: Discover & use Python 3.12
         run: |
-          # same discovery block as lint
-          python --version
+          $candidates = @()
+          if ($env:PY_DIR) { $candidates += $env:PY_DIR }
+          $candidates += @(
+            "R:\tools\python\3.12.10\x64",
+            "R:\tools\python\3.12\x64",
+            "C:\Python312",
+            "C:\Python312\amd64",
+            "$env:LocalAppData\Programs\Python\Python312"
+          )
+          $py = $null
+          $pyLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
+          if ($pyLauncher) {
+            try {
+              $ver = & py -3.12 -c "import platform;print(platform.python_version())" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $ver) {
+                $dir = & py -3.12 -c "import sys,os;print(os.path.dirname(sys.executable))"
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $dir)) { $py = Join-Path $dir "python.exe" }
+              }
+            } catch {}
+          }
+          if (-not $py) {
+            foreach ($root in $candidates | Where-Object { $_ -and (Test-Path $_) }) {
+              $exe = Join-Path $root "python.exe"
+              if (Test-Path $exe) { $py = $exe; break }
+            }
+          }
+          if (-not $py -and (Test-Path "R:\actions-runner")) {
+            $found = Get-ChildItem -Path "R:\actions-runner" -Filter "python.exe" -File -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -match "Python\\3\.12" } |
+                    Select-Object -First 1
+            if ($found) { $py = $found.FullName }
+          }
+          if (-not $py) { Write-Error "Python 3.12 not found"; exit 1 }
+          $pyDir = Split-Path $py -Parent
+          $scriptsDir = Join-Path $pyDir "Scripts"
+          $env:PATH = "$pyDir;$scriptsDir;$env:PATH"
+          $pyDir      | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $scriptsDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PY_DIR=$pyDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & "$py" --version
+          & "$py" -m pip --version
+
 
       - name: Cache pip
         uses: actions/cache@v4
