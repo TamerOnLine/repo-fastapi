@@ -4,9 +4,21 @@
   <a href="https://www.python.org/"><img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-blue" /></a>
   <a href="https://fastapi.tiangolo.com/"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.116.x-009688" /></a>
   <a href="https://pytorch.org/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c" /></a>
-  <a href="https://github.com/USERNAME/REPO/actions"><img alt="CI" src="https://github.com/USERNAME/REPO/actions/workflows/tests.yml/badge.svg" /></a>
+
+  <!-- CI badges -->
+  <a href="https://github.com/USERNAME/gpu-server/actions/workflows/ci-ubuntu.yml">
+    <img alt="Ubuntu CI" src="https://github.com/USERNAME/gpu-server/actions/workflows/ci-ubuntu.yml/badge.svg" />
+  </a>
+  <a href="https://github.com/USERNAME/gpu-server/actions/workflows/ci-macos.yml">
+    <img alt="macOS CI" src="https://github.com/USERNAME/gpu-server/actions/workflows/ci-macos.yml/badge.svg" />
+  </a>
+  <a href="https://github.com/USERNAME/gpu-server/actions/workflows/ci-windows.yml">
+    <img alt="Windows CI" src="https://github.com/USERNAME/gpu-server/actions/workflows/ci-windows.yml/badge.svg" />
+  </a>
+
   <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green" /></a>
 </p>
+
 
 NeuroServe is an **AI Inference Server** built on **FastAPI** and designed to run seamlessly on **GPU / CPU / ROCm / macOS MPS**.  
 It provides ready-to-use REST APIs, a plugin system, prefetch utilities for models, and runtime inspection tools.
