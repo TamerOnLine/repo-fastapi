@@ -27,7 +27,7 @@ env:
   PYTHONDONTWRITEBYTECODE: "1"
   PYTHONUTF8: "1"
   PIP_CACHE_DIR: ${{ github.workspace }}\.pip-cache
-  # عدّل المسار لو مختلف عندك
+
   PY_DIR: R:\actions-runner\_work\_tool\Python\3.12.10\x64
 
 defaults:
@@ -38,37 +38,26 @@ jobs:
   lint:
     name: Lint (ruff/flake + basic checks)
     runs-on: [self-hosted, Windows, X64]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Ensure pip cache dir
-        run: New-Item -ItemType Directory -Force -Path "$env:PIP_CACHE_DIR" | Out-Null
+        run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
       - name: Use preinstalled Python 3.12
         run: |
           $py = "$env:PY_DIR\python.exe"
           $pip = "$env:PY_DIR\Scripts\pip.exe"
+          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
 
-          if (-not (Test-Path $py)) {
-            Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."
-            exit 1
-          }
-
-          # حدّث PATH لهذه الخطوة
+          # حدّث PATH لهذه الخطوة وللقادم
           $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
-
-          # وثّق للمراحل القادمة
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           & $py --version
-          if (Test-Path $pip) {
-            & $py -m pip --version
-          } else {
-            Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
-          }
+          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -80,8 +69,9 @@ jobs:
 
       - name: Install tooling
         run: |
-          python -m pip install -U pip wheel setuptools --cache-dir "$env:PIP_CACHE_DIR"
-          python -m pip install ruff flake8 --cache-dir "$env:PIP_CACHE_DIR"
+          python -m ensurepip --upgrade
+          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+          python -m pip install ruff flake8 --cache-dir $env:PIP_CACHE_DIR
 
       - name: Ruff check
         run: ruff check .
@@ -93,34 +83,25 @@ jobs:
     name: Tests (CPU)
     runs-on: [self-hosted, Windows, X64]
     needs: [lint]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Ensure pip cache dir
-        run: New-Item -ItemType Directory -Force -Path "$env:PIP_CACHE_DIR" | Out-Null
+        run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
       - name: Use preinstalled Python 3.12
         run: |
           $py = "$env:PY_DIR\python.exe"
           $pip = "$env:PY_DIR\Scripts\pip.exe"
-
-          if (-not (Test-Path $py)) {
-            Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."
-            exit 1
-          }
+          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
 
           $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           & $py --version
-          if (Test-Path $pip) {
-            & $py -m pip --version
-          } else {
-            Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
-          }
+          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -132,9 +113,10 @@ jobs:
 
       - name: Install deps
         run: |
-          python -m pip install -U pip wheel setuptools --cache-dir "$env:PIP_CACHE_DIR"
-          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir "$env:PIP_CACHE_DIR" }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir "$env:PIP_CACHE_DIR" }
+          python -m ensurepip --upgrade
+          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
+          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
           if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
 
       - name: Print Python & Torch info (no-fail)
@@ -176,48 +158,40 @@ jobs:
     name: Tests (GPU)
     runs-on: [self-hosted, Windows, X64]
     needs: [tests-cpu]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Ensure pip cache dir
-        run: New-Item -ItemType Directory -Force -Path "$env:PIP_CACHE_DIR" | Out-Null
+        run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
       - name: Use preinstalled Python 3.12
         run: |
           $py = "$env:PY_DIR\python.exe"
           $pip = "$env:PY_DIR\Scripts\pip.exe"
-
-          if (-not (Test-Path $py)) {
-            Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."
-            exit 1
-          }
+          if (-not (Test-Path $py)) { Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."; exit 1 }
 
           $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           & $py --version
-          if (Test-Path $pip) {
-            & $py -m pip --version
-          } else {
-            Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
-          }
+          if (Test-Path $pip) { & $py -m pip --version } else { Write-Host "pip.exe missing; will bootstrap if needed." }
 
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ${{ env:PIP_CACHE_DIR }}
+          path: ${{ env.PIP_CACHE_DIR }}
           key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
           restore-keys: |
             pip-
 
       - name: Install deps (incl. torch if listed)
         run: |
-          python -m pip install -U pip wheel setuptools --cache-dir "$env:PIP_CACHE_DIR"
-          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir "$env:PIP_CACHE_DIR" }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir "$env:PIP_CACHE_DIR" }
+          python -m ensurepip --upgrade
+          python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
+          if (Test-Path "requirements.txt")     { pip install -r requirements.txt --cache-dir $env:PIP_CACHE_DIR }
+          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir $env:PIP_CACHE_DIR }
           if (Test-Path "pyproject.toml")       { pip install -e . --config-settings editable_mode=compat }
 
       - name: Show NVIDIA GPU
