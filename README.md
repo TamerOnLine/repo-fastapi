@@ -2,13 +2,14 @@
 
 ## 📊 Project Status
 
-| Category    | Badges |
-|-------------|--------|
-| **Language** | ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) |
+| Category      | Badges |
+|---------------|--------|
+| **Languages** | ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) ![HTML](https://img.shields.io/badge/HTML-5-orange) ![CSS](https://img.shields.io/badge/CSS-3-blueviolet) |
 | **Framework** | ![FastAPI](https://img.shields.io/badge/FastAPI-0.116.x-009688) |
-| **ML / GPU** | ![PyTorch](https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c) |
-| **CI** | [![Ubuntu CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml) [![Windows CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml) [![macOS CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml) |
-| **License** | ![License](https://img.shields.io/badge/License-MIT-green) |
+| **ML / GPU**  | ![PyTorch](https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c) |
+| **CI**        | [![Ubuntu CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml) [![Windows CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml) [![macOS CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml) |
+| **License**   | ![License](https://img.shields.io/badge/License-MIT-green) |
+
 
 
 
