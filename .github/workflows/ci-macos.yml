@@ -5,12 +5,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - ".github/workflows/**"
+      - ".github/workflows/ci-macos.yml"
       - "app/**"
       - "tests/**"
   pull_request:
     paths:
-      - ".github/workflows/**"
+      - ".github/workflows/ci-macos.yml"
       - "app/**"
       - "tests/**"
 
