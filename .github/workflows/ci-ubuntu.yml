@@ -1,4 +1,4 @@
-name: CI (CPU)
+name: CI • Ubuntu
 
 on:
   push:
@@ -11,17 +11,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  cpu:
-    name: CPU • ${{ matrix.os }} • py${{ matrix.python }}
-    runs-on: ${{ matrix.os }}
+  ubuntu:
+    name: Ubuntu • py${{ matrix.python }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ['3.12', '3.13']
+        python: ['3.12']
     env:
       PYTHONPATH: ${{ github.workspace }}
+      DEVICE: cpu
+      APP_RELOAD: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -46,18 +47,12 @@ jobs:
           ruff check .
           ruff format --check
 
-      - name: Pytest (CPU only; exclude GPU markers)
-        env:
-          DEVICE: cpu
+      - name: Pytest (CPU only)
         shell: bash
         run: |
           pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1
 
-      - name: Smoke test API (/health) on Ubuntu
-        if: startsWith(matrix.os, 'ubuntu')
-        env:
-          DEVICE: cpu
-          APP_RELOAD: "false"
+      - name: Smoke test API (/health)
         shell: bash
         run: |
           uvicorn app.main:app --host 127.0.0.1 --port 8000 &
@@ -73,4 +68,4 @@ jobs:
                   time.sleep(0.5)
           sys.exit(1)
           PY
-                    kill $pid || true
+          kill $pid || true
