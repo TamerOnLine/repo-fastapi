@@ -1,153 +1,227 @@
-# 🚀 NeuroServe -- GPU-Ready FastAPI AI Server
+# 🚀 NeuroServe — GPU‑Ready FastAPI AI Server
 
-[![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)\
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1-009688.svg)](https://fastapi.tiangolo.com/)\
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.6.0%2B-ee4c2c.svg)](https://pytorch.org/)\
-[![Tests](https://github.com/USERNAME/REPO/actions/workflows/tests.yml/badge.svg)](https://github.com/USERNAME/REPO/actions)\
-[![License:
-MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+<p align="left">
+  <a href="https://www.python.org/"><img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-blue" /></a>
+  <a href="https://fastapi.tiangolo.com/"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.116.x-009688" /></a>
+  <a href="https://pytorch.org/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c" /></a>
+  <a href="https://github.com/USERNAME/REPO/actions"><img alt="CI" src="https://github.com/USERNAME/REPO/actions/workflows/tests.yml/badge.svg" /></a>
+  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green" /></a>
+</p>
 
-------------------------------------------------------------------------
+NeuroServe is an **AI Inference Server** built on **FastAPI** and designed to run seamlessly on **GPU / CPU / ROCm / macOS MPS**.  
+It provides ready-to-use REST APIs, a plugin system, prefetch utilities for models, and runtime inspection tools.
 
-## 📖 Overview
+---
 
-**NeuroServe** is an **AI Inference Server** built on
-[FastAPI](https://fastapi.tiangolo.com/) designed to run seamlessly on
-**GPU / CPU / ROCm / macOS MPS**.\
-It provides:
+## ✨ Key Features
+- 🌐 **Ready REST APIs** with Swagger UI (`/docs`) & ReDoc (`/redoc`).
+- ⚡ **PyTorch integration** with auto device selection (CUDA/CPU/MPS/ROCm).
+- 🧩 **Plugin system** for loading and running models or services as standalone plugins.
+- 📊 **Runtime utilities**: CUDA info and warmup routines.
+- 🧠 **Model tools**: TinyNet example model & MLP memory size calculator.
+- 🧱 **Unified responses** with `unify_response` for consistent API outputs.
 
--   🌐 **Ready-to-use REST API** with Swagger UI & ReDoc\
--   ⚡ **PyTorch integration** (CUDA / ROCm / CPU / MPS)\
--   🧠 **Prefetch scripts** for Hugging Face models (BART, DistilBERT,
-    mT5, Whisper, TinyLlama, ResNet18...)\
--   🔧 **install_torch.py** script for automatic PyTorch installation\
--   📊 Runtime utilities to inspect GPU & benchmark performance (CUDA
-    info + warmup)\
--   🧩 Example TinyNet model & **MLP memory size calculator**\
--   📚 Unified `unify_response` utility for consistent model/API outputs
-
-------------------------------------------------------------------------
+---
 
 ## 📂 Project Structure
+```text
+gpu-server/
+├─ app/
+│  ├─ main.py           # FastAPI entrypoint
+│  ├─ runtime.py        # Device (CUDA/CPU/MPS) management & info
+│  ├─ toy_model.py      # Simple PyTorch model
+│  ├─ core/             # config + logging + error handling
+│  ├─ routes/           # API routes (plugins, uploads, ...)
+│  ├─ plugins/          # plugin system (dummy, neu_server)
+│  ├─ templates/        # index.html
+│  └─ static/           # style.css, favicon.ico
+├─ scripts/             # helper scripts (install_torch, prefetch_models, tests)
+├─ models_cache/        # HF/Torch model cache
+├─ docs/                # model licenses & docs
+├─ tests/               # optional tests
+├─ requirements*.txt
+├─ pyproject.toml       # Ruff/pytest/coverage configs
+└─ README.md , LICENSE
+```
 
-    gpu-server/
-    ├── app/                # Core server (FastAPI + Runtime + Models)
-    │   ├── main.py         # FastAPI entrypoint
-    │   ├── runtime.py      # Device & CUDA management
-    │   ├── toy_model.py    # Simple PyTorch model
-    │   └── utils/          # Utilities (unified responses)
-    ├── scripts/            # Helper scripts
-    │   ├── install_torch.py  # Auto PyTorch installer
-    │   ├── prefetch_models.py # Download Hugging Face models
-    │   └── conftest.py       # PyTest fixtures
-    ├── docs/               # Docs & licenses
-    ├── requirements.txt    # Core dependencies
-    ├── requirements-dev.txt# Dev/test dependencies
-    ├── pyproject.toml      # Ruff + PyTest + Coverage configs
-    └── LICENSE             # MIT License
+---
 
-------------------------------------------------------------------------
-
-## ⚙️ Installation
-
-### 1. Clone the repo
-
-``` bash
+## ⚙️ Quick Installation
+### 1) Clone the repository
+```bash
 git clone https://github.com/USERNAME/gpu-server.git
 cd gpu-server
 ```
 
-### 2. Create virtual environment
-
-``` bash
+### 2) Create virtual environment
+```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-.venv\Scripts\activate    # Windows
+# Linux/macOS
+source .venv/bin/activate
+# Windows
+.venv\Scripts\activate
 ```
 
-### 3. Install dependencies
-
-``` bash
+### 3) Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### 4. (Optional) Auto-install PyTorch
-
-``` bash
-python -m scripts.install_torch --gpu   # or --cpu / --rocm
+### (Optional) Auto-install PyTorch
+```bash
+python -m scripts.install_torch --gpu    # or --cpu / --rocm
 ```
 
-### 5. Run the server
-
-``` bash
+### 4) Run the server
+```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-------------------------------------------------------------------------
+> **Note:** Configuration can be set via environment variables (see "Settings").
 
-## 🖥️ Usage
+---
 
-Once running, open your browser:
+## 🖥️ Usage (Direct Links)
+- 🏠 **Home**: <http://localhost:8000/>
+- 📚 **Swagger UI**: <http://localhost:8000/docs>
+- 📘 **ReDoc**: <http://localhost:8000/redoc>
+- ❤️ **Health**: <http://localhost:8000/health>
+- 🧭 **Env Summary**: <http://localhost:8000/env>
+- 🔌 **Plugins**: <http://localhost:8000/plugins>
 
--   <http://localhost:8000/> → Home\
--   <http://localhost:8000/docs> → Swagger UI\
--   <http://localhost:8000/redoc> → ReDoc\
--   <http://localhost:8000/health> → Health check
-- http://localhost:8000/env
-- http://localhost:8000/plugins
-
-Example request:
-
-``` bash
+### Quick Examples
+```bash
 curl http://localhost:8000/health
-# {"status": "ok"}
+# {"status":"ok"}
 ```
 
-------------------------------------------------------------------------
+Run a task in the **dummy** plugin:
+```bash
+curl -X POST http://localhost:8000/plugins/dummy/ping \
+     -H "Content-Type: application/json" \
+     -d '{"hello":"world"}'
+```
+
+Python:
+```python
+import requests
+r = requests.post("http://localhost:8000/plugins/dummy/ping", json={"hello": "world"})
+print(r.json())
+```
+
+---
+
+## 🔧 Settings (Pydantic Settings)
+Environment variables prefixed with `APP_` and optionally loaded from `.env`.
+
+| Name | Default | Description |
+|---|---|---|
+| `APP_APP_NAME` | `NeuroServe` | Application name |
+| `APP_ENV` | `development` | `development` / `staging` / `production` |
+| `APP_HOST` | `0.0.0.0` | Bind address |
+| `APP_PORT` | `8000` | Port |
+| `APP_RELOAD` | `true` | Auto-reload in dev mode |
+| `APP_LOG_LEVEL` | `info` | Log level: `debug`/`info`/`warning`/`error` |
+| `APP_DEVICE` | `cuda:0` | Device (`cuda:0`, `cpu`, `mps`, etc.) |
+| `APP_MODEL_CACHE_ROOT` | `models_cache` | Cache root for models |
+| `APP_HF_HOME` | auto | HuggingFace cache (within root) |
+| `APP_TORCH_HOME` | auto | Torch cache |
+| `APP_TRANSFORMERS_CACHE` | auto | HF hub cache |
+| `APP_STATIC_DIR` | `app/static` | Static files dir |
+| `APP_TEMPLATES_DIR` | `app/templates` | Templates dir |
+| `APP_UPLOAD_DIR` | `uploads` | Upload dir |
+| `APP_CORS_ALLOW_ORIGINS` | `[*]` | CORS origins |
+| `APP_CORS_ALLOW_METHODS` | `[*]` | CORS methods |
+| `APP_CORS_ALLOW_HEADERS` | `[*]` | CORS headers |
+| `APP_CORS_ALLOW_CREDENTIALS` | `false` | Allow cookies |
+| `APP_DB_URL` | — | Database URL (optional) |
+| `APP_JWT_*` | — | JWT settings (optional) |
+
+---
+
+## 🔌 Plugins System
+Each plugin lives under `app/plugins/<name>` and usually includes:
+```
+manifest.json
+plugin.py        # defines a Plugin class inheriting AIPlugin
+README.md        # plugin docs
+```
+
+API Endpoints:
+- `GET /plugins` — list all loaded plugins with metadata.
+- `POST /plugins/{name}/{task}` — run a task in the specified plugin.
+
+Example `plugin.py`:
+```python
+from app.plugins.base import AIPlugin
+
+class Plugin(AIPlugin):
+    name = "my_plugin"
+    tasks = ["infer"]
+
+    def load(self) -> None:
+        # Load models/resources once
+        ...
+
+    def infer(self, payload: dict) -> dict:
+        return {"task": payload.get("task"), "message": "ok", "payload_received": payload}
+```
+
+---
 
 ## 🧪 Development & Testing
-
 Install dev requirements:
-
-``` bash
+```bash
 pip install -r requirements-dev.txt
 pre-commit install
 ```
 
 Run tests:
-
-``` bash
+```bash
 pytest
 ```
 
-------------------------------------------------------------------------
+Ruff & formatting run automatically via pre-commit hooks.
 
-## 📊 Prefetch Models
+---
 
-To download supported models into `models_cache/`:
-
-``` bash
+## 📦 Prefetch Models
+Download supported models into `models_cache/`:
+```bash
 python -m scripts.prefetch_models
 ```
+(See `docs/LICENSES.md` for model licenses.)
 
-Included models: - 📄 NLP: BART, DistilBERT, mT5, TinyLlama\
-- 🎙️ Speech: Whisper\
-- 🖼️ Vision: ResNet18
+---
 
-------------------------------------------------------------------------
+## 🧰 Runtime Utilities
+- **CUDA info** via `app/runtime.py` (`cuda_info()`).
+- **Warmup** routines for GPU readiness.
+
+---
+
+## 🏭 Deployment Notes
+- Use Uvicorn/Hypercorn behind a proxy (e.g., Nginx) with multiple workers.
+- Configure environment via `APP_*` vars instead of code changes.
+- Adjust CORS carefully for production.
+
+---
 
 ## 🤝 Contributing
+- Open **Issues** for ideas/bugs.
+- Use **Pull Requests** for changes.
+- Follow style (Ruff + pre-commit).
 
-Contributions are welcome!\
-- Open **Issues** for ideas or bugs.\
-- Use **Pull Requests** for changes.\
-- Follow code style (Ruff + pre-commit).
-
-------------------------------------------------------------------------
+---
 
 ## 📜 License
+Licensed under **MIT** — see [LICENSE](./LICENSE). Models may have their own licenses (see `docs/LICENSES.md`).
 
-This project is licensed under the **MIT License** -- see
-[LICENSE](./LICENSE).\
-\> Some models have their own licenses -- see
-[docs/LICENSES.md](docs/LICENSES.md).
+---
+
+## 🗺️ Roadmap (Suggested)
+- [ ] Add `/cuda` endpoint (return `cuda_info()`).
+- [ ] Add `/warmup` endpoint.
+- [ ] Provide plugin template/CLI generator.
+- [ ] Support API Key/JWT authentication.
+- [ ] Example plugins (translation, summarization, image classification).
