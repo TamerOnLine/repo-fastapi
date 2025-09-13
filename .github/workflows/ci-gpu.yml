@@ -23,7 +23,7 @@ concurrency:
 
 defaults:
   run:
-    shell: pwsh
+    shell: powershell
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
