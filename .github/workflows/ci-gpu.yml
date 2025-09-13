@@ -45,6 +45,7 @@ jobs:
         run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
       - name: Discover & use Python 3.12
+        shell: powershell
         run: |
           $candidates = @()
           if ($env:PY_DIR) { $candidates += $env:PY_DIR }
@@ -233,7 +234,7 @@ jobs:
     runs-on: [self-hosted, Windows, X64]
     needs: [tests-cpu]
     env:
-      # كاش ثابت داخل مساحة العمل لتفادي مشاكل LOCALAPPDATA على الـ self-hosted
+
       PIP_CACHE_DIR: ${{ github.workspace }}\_pip_cache
     steps:
       - name: Checkout
