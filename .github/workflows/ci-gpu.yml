@@ -27,7 +27,7 @@ env:
   PYTHONDONTWRITEBYTECODE: "1"
   PYTHONUTF8: "1"
   PIP_CACHE_DIR: ${{ github.workspace }}\.pip-cache
-
+  # عدّل المسار لو مختلف عندك
   PY_DIR: R:\actions-runner\_work\_tool\Python\3.12.10\x64
 
 defaults:
@@ -56,13 +56,12 @@ jobs:
             exit 1
           }
 
-
+          # حدّث PATH لهذه الخطوة
           $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
 
-
+          # وثّق للمراحل القادمة
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
 
           & $py --version
           if (Test-Path $pip) {
@@ -70,7 +69,6 @@ jobs:
           } else {
             Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
           }
-
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -105,13 +103,24 @@ jobs:
 
       - name: Use preinstalled Python 3.12
         run: |
-          if (-not (Test-Path "$env:PY_DIR")) {
-            Write-Error "Python not found at $env:PY_DIR. Please install Python 3.12 and update PY_DIR."
+          $py = "$env:PY_DIR\python.exe"
+          $pip = "$env:PY_DIR\Scripts\pip.exe"
+
+          if (-not (Test-Path $py)) {
+            Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."
             exit 1
           }
+
+          $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python --version
-          pip --version
+          "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          & $py --version
+          if (Test-Path $pip) {
+            & $py -m pip --version
+          } else {
+            Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
+          }
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -177,18 +186,29 @@ jobs:
 
       - name: Use preinstalled Python 3.12
         run: |
-          if (-not (Test-Path "$env:PY_DIR")) {
-            Write-Error "Python not found at $env:PY_DIR. Please install Python 3.12 and update PY_DIR."
+          $py = "$env:PY_DIR\python.exe"
+          $pip = "$env:PY_DIR\Scripts\pip.exe"
+
+          if (-not (Test-Path $py)) {
+            Write-Error "python.exe not found at $py. Update PY_DIR in workflow env."
             exit 1
           }
+
+          $env:PATH = "$env:PY_DIR;$env:PY_DIR\Scripts;$env:PATH"
           "$env:PY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python --version
-          pip --version
+          "$env:PY_DIR\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          & $py --version
+          if (Test-Path $pip) {
+            & $py -m pip --version
+          } else {
+            Write-Host "pip.exe not found under Scripts; will bootstrap via ensurepip if needed."
+          }
 
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ${{ env.PIP_CACHE_DIR }}
+          path: ${{ env:PIP_CACHE_DIR }}
           key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
           restore-keys: |
             pip-
