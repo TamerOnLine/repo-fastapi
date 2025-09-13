@@ -103,6 +103,7 @@ jobs:
             pip-
 
       - name: Install tooling
+        shell: powershell
         run: |
           python -m ensurepip --upgrade
           python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
@@ -110,9 +111,11 @@ jobs:
 
       - name: Ruff check
         run: ruff check .
+        shell: powershell
 
       - name: Flake8
         run: flake8 .
+        shell: powershell
 
   tests-cpu:
     name: Tests (CPU)
@@ -124,6 +127,7 @@ jobs:
 
       - name: Ensure pip cache dir
         run: New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
+
 
       - name: Discover & use Python 3.12
         run: |
@@ -246,7 +250,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:PIP_CACHE_DIR | Out-Null
 
       - name: Discover & use Python 3.12
-        shell: pwsh
+        shell: powershell
         run: |
           $candidates = @()
           if ($env:PY_DIR) { $candidates += $env:PY_DIR }
@@ -299,7 +303,7 @@ jobs:
             pip-
 
       - name: Install deps
-        shell: pwsh
+        shell: powershell
         run: |
           python -m ensurepip --upgrade
           python -m pip install -U pip wheel setuptools --cache-dir $env:PIP_CACHE_DIR
@@ -309,7 +313,7 @@ jobs:
 
       - name: Show NVIDIA GPU
         id: nvsmi
-        shell: pwsh
+        shell: powershell
         continue-on-error: true
         run: |
           $exists = Get-Command nvidia-smi -ErrorAction SilentlyContinue
@@ -321,34 +325,38 @@ jobs:
             "has_gpu=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
+
+
       - name: Torch CUDA availability
-        shell: pwsh
+        shell: powershell
         continue-on-error: true
         run: |
-          $code = @'
-                  import sys, platform
-                  print("Python:", platform.python_version())
-                  try:
-                      import torch
-                      print("Torch:", torch.__version__)
-                      has_cuda = torch.cuda.is_available()
-                      print("CUDA available:", has_cuda)
-                      cnt = torch.cuda.device_count() if has_cuda else 0
-                      print("CUDA device count:", cnt)
-                      if has_cuda and cnt > 0:
-                          i = torch.cuda.current_device()
-                          print("Current device index:", i)
-                          print("Device name:", torch.cuda.get_device_name(i))
-                  except Exception as e:
-                      print("Torch probe failed:", e)'@
-                  '@
-
-
+          $lines = @(
+            'import platform'
+            'print("Python:", platform.python_version())'
+            'try:'
+            '    import torch'
+            '    print("Torch:", getattr(torch, "__version__", "not installed"))'
+            '    has_cuda = torch.cuda.is_available()'
+            '    print("CUDA available:", has_cuda)'
+            '    cnt = torch.cuda.device_count() if has_cuda else 0'
+            '    print("CUDA device count:", cnt)'
+            '    if has_cuda and cnt > 0:'
+            '        i = torch.cuda.current_device()'
+            '        print("Current device index:", i)'
+            '        print("Device name:", torch.cuda.get_device_name(i))'
+            'except Exception as e:'
+            '    print("Torch probe failed:", e)'
+          )
+          $code = $lines -join "`n"
           $code | python -
+
+
+
 
       - name: Run pytest (GPU markers)
         if: steps.nvsmi.outputs.has_gpu == 'true'
-        shell: pwsh
+        shell: powershell
         run: |
           pytest -q -m "gpu or gpu_cuda or gpu_mps" --maxfail=1 --disable-warnings --log-cli-level=INFO
 
