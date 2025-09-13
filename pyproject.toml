@@ -1,45 +1,24 @@
-<<<<<<< HEAD
 # Project-wide tooling config (no packaging metadata).
 
 [tool.ruff]
-=======
-# Minimal project-wide config (no packaging metadata)
-# If you later publish to PyPI, you can add [project] and [build-system] sections.
-
-[tool.ruff]
-# Python target used for linting/formatting decisions
->>>>>>> de61936 (start)
 target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
-<<<<<<< HEAD
 # E (pycodestyle errors), F (pyflakes), I (isort via Ruff)
-=======
-# E (pycodestyle errors), F (pyflakes), I (import sorting via Ruff's isort)
->>>>>>> de61936 (start)
 select = ["E", "F", "I"]
 ignore = []
 
 [tool.ruff.lint.isort]
-<<<<<<< HEAD
-=======
-# Treat 'app' as first-party to sort imports correctly
->>>>>>> de61936 (start)
 known-first-party = ["app"]
 combine-as-imports = true
 
 [tool.ruff.format]
-<<<<<<< HEAD
 # Black-like formatting without Black
-=======
-# Black-like formatting without needing Black
->>>>>>> de61936 (start)
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 
-<<<<<<< HEAD
 # Allow long lines in tests and scripts if needed
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["E501"]
@@ -48,8 +27,6 @@ line-ending = "auto"
 [tool.flake8]
 max-line-length = 120
 
-=======
->>>>>>> de61936 (start)
 [tool.pytest.ini_options]
 addopts = "-q -r fEsxX --maxfail=1 --disable-warnings"
 testpaths = ["tests"]

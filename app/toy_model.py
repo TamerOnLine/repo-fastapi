@@ -5,10 +5,7 @@ import torch.nn as nn
 
 from .runtime import pick_device
 
-<<<<<<< HEAD
 
-=======
->>>>>>> de61936 (start)
 class TinyNet(nn.Module):
     """
     A simple feedforward neural network with one hidden layer.
@@ -21,15 +18,7 @@ class TinyNet(nn.Module):
 
     def __init__(self, in_features: int = 512, hidden: int = 1024, out_features: int = 10):
         super().__init__()
-<<<<<<< HEAD
         self.net = nn.Sequential(nn.Linear(in_features, hidden), nn.ReLU(), nn.Linear(hidden, out_features))
-=======
-        self.net = nn.Sequential(
-            nn.Linear(in_features, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, out_features)
-        )
->>>>>>> de61936 (start)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -43,10 +32,7 @@ class TinyNet(nn.Module):
         """
         return self.net(x)
 
-<<<<<<< HEAD
 
-=======
->>>>>>> de61936 (start)
 def load_model() -> tuple[TinyNet, torch.device]:
     """
     Instantiate and prepare the TinyNet model for inference.

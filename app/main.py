@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import uuid
 
 from fastapi import FastAPI, Request
@@ -50,53 +49,18 @@ app.add_middleware(RequestIDMiddleware)
 
 # Register exception handlers
 register_exception_handlers(app)
-=======
-from pathlib import Path
-
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
-
-
-# Template and static file paths
-BASE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-app = FastAPI(title="NeuroServe")
-
-# Serve static files under /static if available
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
->>>>>>> de61936 (start)
 
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-<<<<<<< HEAD
     return templates.TemplateResponse("index.html", {"request": request, "title": settings.APP_NAME})
 
 
 @app.get("/health")
-=======
-    """
-    Serve the homepage template.
-
-    Args:
-        request (Request): The HTTP request object.
-
-    Returns:
-        TemplateResponse: Rendered index.html template.
-    """
-    return templates.TemplateResponse("index.html", {"request": request})
-
-@app.get("/health", response_class=JSONResponse)
->>>>>>> de61936 (start)
 def health():
     return {"status": "ok"}
 
 
-<<<<<<< HEAD
 @app.get("/env")
 def env():
     return settings.summary()
@@ -109,6 +73,3 @@ def favicon():
 
 # Include plugin routes
 app.include_router(plugins_routes.router, tags=["plugins"])
-=======
-# Include routers for CUDA and file uploads
->>>>>>> de61936 (start)
