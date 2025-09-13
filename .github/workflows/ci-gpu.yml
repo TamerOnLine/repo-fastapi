@@ -38,13 +38,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Bootstrap cache/env vars
-        id: boot
-        run: |
-          $cacheDir = Join-Path $env:RUNNER_TEMP 'pip-cache'
-          "cache_dir=$cacheDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "os=$env:RUNNER_OS"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -53,15 +46,15 @@ jobs:
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ${{ steps.boot.outputs.cache_dir }}
-          key: pip-${{ steps.boot.outputs.os }}-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+          path: ${{ github.workspace }}/.pip-cache
+          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
           restore-keys: |
-            pip-${{ steps.boot.outputs.os }}-
+            pip-
 
       - name: Install tooling
         run: |
-          python -m pip install -U pip wheel setuptools
-          python -m pip install ruff flake8
+          python -m pip install -U pip wheel setuptools --cache-dir "${{ github.workspace }}/.pip-cache"
+          python -m pip install ruff flake8 --cache-dir "${{ github.workspace }}/.pip-cache"
 
       - name: Ruff check
         run: ruff check .
@@ -77,13 +70,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Bootstrap cache/env vars
-        id: boot
-        run: |
-          $cacheDir = Join-Path $env:RUNNER_TEMP 'pip-cache'
-          "cache_dir=$cacheDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "os=$env:RUNNER_OS"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -92,63 +78,61 @@ jobs:
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ${{ steps.boot.outputs.cache_dir }}
-          key: pip-${{ steps.boot.outputs.os }}-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+          path: ${{ github.workspace }}/.pip-cache
+          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
           restore-keys: |
-            pip-${{ steps.boot.outputs.os }}-
+            pip-
 
       - name: Install deps
         run: |
-          python -m pip install -U pip wheel setuptools
-          if (Test-Path "requirements.txt") { pip install -r requirements.txt }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt }
-          if (Test-Path "pyproject.toml") { pip install -e . }
+          python -m pip install -U pip wheel setuptools --cache-dir "${{ github.workspace }}/.pip-cache"
+          if (Test-Path "requirements.txt") { pip install -r requirements.txt --cache-dir "${{ github.workspace }}/.pip-cache" }
+          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir "${{ github.workspace }}/.pip-cache" }
+          if (Test-Path "pyproject.toml") { pip install -e . --config-settings editable_mode=compat }
 
-      - name: Print Python & Torch info (if present)
+      - name: Print Python & Torch info (no lint issues)
         continue-on-error: true
         run: |
-          python -V
-          $code = @'
-          try:
-              import torch, platform
-              print("Torch:", torch.__version__)
-              print("CUDA available:", torch.cuda.is_available())
-              print("Device count:", torch.cuda.device_count() if torch.cuda.is_available() else 0)
-          except Exception as e:
-              print("Torch not installed:", e)
-          '@
-                    python -c $code
+          $lines = @(
+            'import platform'
+            'print("Python:", platform.python_version())'
+            'try:'
+            '    import torch'
+            '    print("Torch:", getattr(torch, "__version__", "not installed"))'
+            '    ok = hasattr(torch, "cuda") and torch.cuda.is_available()'
+            '    print("CUDA available:", ok)'
+            '    if ok:'
+            '        print("Device count:", torch.cuda.device_count())'
+            'except Exception as e:'
+            '    print("Torch not installed or failed:", e)'
+          )
+          $code = ($lines -join "`n")
+          python -c $code
 
-                - name: Run pytest (CPU-only)
-                  env:
-                    PYTEST_ADDOPTS: "-q"
-                  run: |
-                    mkdir -Force .\test-logs | Out-Null
-                    pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings `
-                          --log-cli-level=INFO `
-                          2>&1 | Tee-Object -FilePath .\test-logs\pytest_cpu.txt
 
-                - name: Upload CPU test logs
-                  if: always()
-                  uses: actions/upload-artifact@v4
-                  with:
-                    name: logs-cpu
-                    path: test-logs/
+      - name: Run pytest (CPU-only)
+        env:
+          PYTEST_ADDOPTS: "-q"
+        run: |
+          New-Item -ItemType Directory -Force -Path .\test-logs | Out-Null
+          pytest -q -m "not gpu and not gpu_cuda and not gpu_mps" --maxfail=1 --disable-warnings `
+                 --log-cli-level=INFO `
+                 2>&1 | Tee-Object -FilePath .\test-logs\pytest_cpu.txt
 
-            tests-gpu:
-              name: Tests (GPU)
-              runs-on: [self-hosted, Windows, X64]
-              needs: [tests-cpu]
-              steps:
-                - name: Checkout
-                  uses: actions/checkout@v4
+      - name: Upload CPU test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-cpu
+          path: test-logs/
 
-                - name: Bootstrap cache/env vars
-                  id: boot
-                  run: |
-                    $cacheDir = Join-Path $env:RUNNER_TEMP 'pip-cache'
-                    "cache_dir=$cacheDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-                    "os=$env:RUNNER_OS"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+  tests-gpu:
+    name: Tests (GPU)
+    runs-on: [self-hosted, Windows, X64]
+    needs: [tests-cpu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -158,17 +142,17 @@ jobs:
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ${{ steps.boot.outputs.cache_dir }}
-          key: pip-${{ steps.boot.outputs.os }}-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
+          path: ${{ github.workspace }}/.pip-cache
+          key: pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
           restore-keys: |
-            pip-${{ steps.boot.outputs.os }}-
+            pip-
 
-      - name: Install deps (incl. torch from requirements*)
+      - name: Install deps (incl. torch if listed)
         run: |
-          python -m pip install -U pip wheel setuptools
-          if (Test-Path "requirements.txt") { pip install -r requirements.txt }
-          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt }
-          if (Test-Path "pyproject.toml") { pip install -e . }
+          python -m pip install -U pip wheel setuptools --cache-dir "${{ github.workspace }}/.pip-cache"
+          if (Test-Path "requirements.txt") { pip install -r requirements.txt --cache-dir "${{ github.workspace }}/.pip-cache" }
+          if (Test-Path "requirements-dev.txt") { pip install -r requirements-dev.txt --cache-dir "${{ github.workspace }}/.pip-cache" }
+          if (Test-Path "pyproject.toml") { pip install -e . --config-settings editable_mode=compat }
 
       - name: Show NVIDIA GPU
         id: nvsmi
@@ -177,40 +161,44 @@ jobs:
           $exists = Get-Command nvidia-smi -ErrorAction SilentlyContinue
           if ($null -eq $exists) {
             Write-Host "nvidia-smi not found"
-            echo "has_gpu=false" >> $env:GITHUB_OUTPUT
+            "has_gpu=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
             nvidia-smi
-            echo "has_gpu=true" >> $env:GITHUB_OUTPUT
+            "has_gpu=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
-      - name: Torch CUDA availability
+      - name: Torch CUDA availability (no lint issues)
         id: torchcheck
         continue-on-error: true
         run: |
-          $code = @'
-          try:
-              import torch
-              print("Torch:", torch.__version__)
-              print("CUDA available:", torch.cuda.is_available())
-              print("CUDA devices:", torch.cuda.device_count() if torch.cuda.is_available() else 0)
-          except Exception as e:
-              print("Torch not installed:", e)
-          '@
-                    python -c $code
+          $lines = @(
+            'try:'
+            '    import torch'
+            '    print("Torch:", getattr(torch, "__version__", "not installed"))'
+            '    ok = hasattr(torch, "cuda") and torch.cuda.is_available()'
+            '    print("CUDA available:", ok)'
+            '    if ok:'
+            '        print("CUDA devices:", torch.cuda.device_count())'
+            'except Exception as e:'
+            '    print("Torch not installed or failed:", e)'
+          )
+          $code = ($lines -join "`n")
+          python -c $code
 
-                - name: Run pytest (GPU markers)
-                  if: steps.nvsmi.outputs.has_gpu == 'true'
-                  env:
-                    PYTEST_ADDOPTS: "-q"
-                  run: |
-                    mkdir -Force .\test-logs | Out-Null
-                    pytest -q -m "gpu or gpu_cuda or gpu_mps" --maxfail=1 --disable-warnings `
-                          --log-cli-level=INFO `
-                          2>&1 | Tee-Object -FilePath .\test-logs\pytest_gpu.txt
 
-                - name: Upload GPU test logs
-                  if: always()
-                  uses: actions/upload-artifact@v4
-                  with:
-                    name: logs-gpu
-                    path: test-logs/
+      - name: Run pytest (GPU markers)
+        if: steps.nvsmi.outputs.has_gpu == 'true'
+        env:
+          PYTEST_ADDOPTS: "-q"
+        run: |
+          New-Item -ItemType Directory -Force -Path .\test-logs | Out-Null
+          pytest -q -m "gpu or gpu_cuda or gpu_mps" --maxfail=1 --disable-warnings `
+                 --log-cli-level=INFO `
+                 2>&1 | Tee-Object -FilePath .\test-logs\pytest_gpu.txt
+
+      - name: Upload GPU test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-gpu
+          path: test-logs/
