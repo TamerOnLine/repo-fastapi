@@ -31,6 +31,7 @@ from app.core.config import get_settings
 
 log = logging.getLogger("errors")
 
+
 def _wants_html(request: Request) -> bool:
     """
     Determine whether the client prefers HTML over JSON.
@@ -47,6 +48,7 @@ def _wants_html(request: Request) -> bool:
     accept = request.headers.get("accept", "")
     return "text/html" in accept.lower()
 
+
 def _request_id(request: Request) -> Optional[str]:
     """
     Extract request ID from request state if available.
@@ -58,6 +60,7 @@ def _request_id(request: Request) -> Optional[str]:
         Optional[str]: Request ID or None.
     """
     return getattr(request.state, "request_id", None)
+
 
 def _render(
     request: Request,
@@ -97,11 +100,12 @@ def _render(
     if _wants_html(request):
         try:
             templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
+            # New signature: TemplateResponse(request, name, context, ...)
             return templates.TemplateResponse(
+                request,
                 template_name,
                 {
-                    "request": request,
-                    **payload,
+                    **payload,  # no "request" key needed anymore
                     "title": f"{status_code} – {message}",
                 },
                 status_code=status_code,
@@ -126,6 +130,7 @@ def _render(
             "request_id": payload["request_id"],
         },
     )
+
 
 def register_exception_handlers(app: FastAPI) -> None:
     """

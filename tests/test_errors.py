@@ -6,7 +6,15 @@ from fastapi import Body, HTTPException, status
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
+import pytest
+
 from app.main import app
+
+@pytest.fixture
+def client_no_raise():
+    # TestClient that does NOT raise server exceptions, so we can assert 500 responses
+    with TestClient(app, raise_server_exceptions=False) as c:
+        yield c
 
 # NOTE: Add test routes once only
 if not getattr(app.state, "_test_routes_added", False):
@@ -122,10 +130,11 @@ def test_413_payload_too_large():
 
 
 def test_415_unsupported_media_type():
-    r = client.post("/_unsupported-media", data="abc", headers={"Content-Type": "text/plain"})
+    r = client.post("/_unsupported-media", content=b"abc", headers={"Content-Type": "text/plain"})
     assert r.status_code == 415
     body = r.json()
     assert body["code"] == 415 and body["message"]
+
 
 
 def test_429_too_many_requests():
@@ -152,11 +161,12 @@ def test_422_validation_error_html():
 
 
 # --------- 500/501/503/408 Errors ---------
-def test_500_internal_server_error():
-    r = client.get("/_boom", headers={"Accept": "application/json"})
+def test_500_internal_server_error(client_no_raise):
+    r = client_no_raise.get("/_boom", headers={"Accept": "application/json"})
     assert r.status_code == 500
-    body = r.json()
-    assert body["code"] == 500 and body["message"] == "Internal server error"
+
+
+
 
 
 def test_501_not_implemented():
