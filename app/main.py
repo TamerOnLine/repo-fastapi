@@ -11,19 +11,21 @@ from app.core.errors import register_exception_handlers
 from app.core.logging_ import setup_logging
 from app.routes import plugins as plugins_routes
 
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+
 # Initialize settings and logging
 settings = get_settings()
 setup_logging()
 
-# Set base directory and templates path
-BASE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+# Use settings paths (recommended)
+templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 
 # Create FastAPI application instance
 app = FastAPI(title=settings.APP_NAME)
 
-# Mount static files directory
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+# Mount static files directory (from settings)
+app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 
 # Add CORS middleware with settings from config
 app.add_middleware(
@@ -34,42 +36,30 @@ app.add_middleware(
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
 )
 
-# Register custom exception handlers
+# Middleware to add a unique request ID to each request
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        rid = request.headers.get("x-request-id") or uuid.uuid4().hex
+        request.state.request_id = rid
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = rid
+        return response
+
+app.add_middleware(RequestIDMiddleware)
+
+# Register custom exception handlers (JSON/HTML negotiation)
 register_exception_handlers(app)
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    """
-    Serve the index HTML page.
-
-    Args:
-        request (Request): The incoming HTTP request.
-
-    Returns:
-        TemplateResponse: Rendered HTML template for the index page.
-    """
     return templates.TemplateResponse("index.html", {"request": request, "title": settings.APP_NAME})
-
 
 @app.get("/health")
 def health():
-    """
-    Health check endpoint.
-
-    Returns:
-        dict: A simple status check response.
-    """
     return {"status": "ok"}
-
 
 @app.get("/env")
 def env():
-    """
-    Return application environment summary.
-
-    Returns:
-        dict: Summary of environment settings.
-    """
     return settings.summary()
 
 # Include plugin routes
