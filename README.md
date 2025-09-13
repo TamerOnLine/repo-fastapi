@@ -1,23 +1,15 @@
 # 🚀 NeuroServe — GPU‑Ready FastAPI AI Server
 
-<p align="left">
-  <a href="https://www.python.org/"><img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-blue" /></a>
-  <a href="https://fastapi.tiangolo.com/"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.116.x-009688" /></a>
-  <a href="https://pytorch.org/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c" /></a>
+## 📊 Project Status
 
-  <!-- CI badges -->
-  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml">
-    <img alt="Ubuntu CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml/badge.svg" />
-  </a>
-  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml">
-    <img alt="macOS CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml/badge.svg" />
-  </a>
-  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml">
-    <img alt="Windows CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml/badge.svg" />
-  </a>
+| Category    | Badges |
+|-------------|--------|
+| **Language** | ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) |
+| **Framework** | ![FastAPI](https://img.shields.io/badge/FastAPI-0.116.x-009688) |
+| **ML / GPU** | ![PyTorch](https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c) |
+| **CI** | [![Ubuntu CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml) [![Windows CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml) [![macOS CI](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml) |
+| **License** | ![License](https://img.shields.io/badge/License-MIT-green) |
 
-  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green" /></a>
-</p>
 
 
 
