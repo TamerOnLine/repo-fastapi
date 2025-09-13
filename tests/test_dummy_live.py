@@ -1,5 +1,7 @@
 # tests/test_dummy_live.py
-import pytest, requests
+import pytest
+import requests
+
 
 @pytest.mark.integration
 def test_dummy_ping_live():

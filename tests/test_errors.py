@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from typing import Optional
 
+import pytest
 from fastapi import Body, HTTPException, status
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
-import pytest
-
 from app.main import app
+
 
 @pytest.fixture
 def client_no_raise():
     # TestClient that does NOT raise server exceptions, so we can assert 500 responses
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
+
 
 # NOTE: Add test routes once only
 if not getattr(app.state, "_test_routes_added", False):
@@ -136,7 +137,6 @@ def test_415_unsupported_media_type():
     assert body["code"] == 415 and body["message"]
 
 
-
 def test_429_too_many_requests():
     r = client.get("/_too-many", headers={"Accept": "application/json"})
     assert r.status_code == 429
@@ -164,9 +164,6 @@ def test_422_validation_error_html():
 def test_500_internal_server_error(client_no_raise):
     r = client_no_raise.get("/_boom", headers={"Accept": "application/json"})
     assert r.status_code == 500
-
-
-
 
 
 def test_501_not_implemented():

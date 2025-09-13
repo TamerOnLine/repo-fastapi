@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 
 SCHEMA_VERSION = 1
 
+
 def _jsonable(x: Any) -> Any:
     """
     Convert common data types (NumPy, Torch) to JSON-serializable formats.
@@ -48,6 +49,7 @@ def _jsonable(x: Any) -> Any:
     except Exception:
         return None
 
+
 def is_already_unified(raw: Dict[str, Any]) -> bool:
     """
     Check if a response is already unified.
@@ -58,11 +60,8 @@ def is_already_unified(raw: Dict[str, Any]) -> bool:
     Returns:
         bool: True if response is already unified, else False.
     """
-    return (
-        isinstance(raw, dict)
-        and raw.get("schema_version") is not None
-        and raw.get("status") in ("ok", "error")
-    )
+    return isinstance(raw, dict) and raw.get("schema_version") is not None and raw.get("status") in ("ok", "error")
+
 
 def unify_response(provider: str, task: str, raw: Any, request_id: Optional[str] = None) -> Dict[str, Any]:
     """
@@ -99,10 +98,7 @@ def unify_response(provider: str, task: str, raw: Any, request_id: Optional[str]
             out["meta"]["request_id"] = request_id
         return _jsonable(out)
 
-    meta_keys = (
-        "device", "model", "backend", "params", "input", "usage",
-        "input_chars", "truncated_to_1024_tokens"
-    )
+    meta_keys = ("device", "model", "backend", "params", "input", "usage", "input_chars", "truncated_to_1024_tokens")
     meta = {k: raw.get(k) for k in meta_keys if k in raw}
 
     if "error" in raw:

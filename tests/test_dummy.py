@@ -1,6 +1,8 @@
 # tests/test_dummy.py
 from fastapi.testclient import TestClient
+
 from app.main import app
+
 
 def test_dummy_ping_inprocess():
     client = TestClient(app)  # no real server, same process

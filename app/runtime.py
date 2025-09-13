@@ -18,6 +18,7 @@ os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")  # Optional: silence 
 
 DEVICE = os.getenv("DEVICE", "cuda:0")
 
+
 def pick_device() -> torch.device:
     """
     Select a valid device based on the DEVICE environment variable.
@@ -39,6 +40,7 @@ def pick_device() -> torch.device:
             return torch.device("cuda:0")
 
     return torch.device("cpu")
+
 
 def pick_dtype(device: str | None = None) -> torch.dtype:
     """
@@ -64,6 +66,7 @@ def pick_dtype(device: str | None = None) -> torch.dtype:
 
     return torch.float32
 
+
 def cuda_info() -> dict:
     """
     Retrieve CUDA and GPU device information.
@@ -85,13 +88,14 @@ def cuda_info() -> dict:
         info.update(
             {
                 "gpu_name": props.name,
-                "total_memory_gb": round(props.total_memory / (1024 ** 3), 2),
+                "total_memory_gb": round(props.total_memory / (1024**3), 2),
                 "device_index": idx,
                 "driver": getattr(torch.cuda, "driver_version", None),
             }
         )
 
     return info
+
 
 def warmup() -> dict:
     """

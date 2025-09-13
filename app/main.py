@@ -1,17 +1,16 @@
-from pathlib import Path
+import uuid
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging_ import setup_logging
 from app.routes import plugins as plugins_routes
-
-import uuid
-from starlette.middleware.base import BaseHTTPMiddleware
 
 # Initialize settings and logging
 settings = get_settings()
@@ -35,6 +34,7 @@ app.add_middleware(
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
 )
 
+
 # Middleware: unique request ID
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -44,26 +44,32 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         response.headers["X-Request-ID"] = rid
         return response
 
+
 app.add_middleware(RequestIDMiddleware)
 
 # Register exception handlers
 register_exception_handlers(app)
 
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "title": settings.APP_NAME})
+
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+
 @app.get("/env")
 def env():
     return settings.summary()
 
+
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     return FileResponse(str(settings.STATIC_DIR / "favicon.ico"))
+
 
 # Include plugin routes
 app.include_router(plugins_routes.router, tags=["plugins"])

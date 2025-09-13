@@ -8,6 +8,7 @@ from app.plugins import loader
 
 router = APIRouter()
 
+
 def _ensure_discovered(request: Request) -> None:
     """
     Ensure plugin registry and metadata are discovered and cached in app state.
@@ -38,12 +39,7 @@ def list_plugins(request: Request) -> Dict[str, Any]:
 
 
 @router.post("/plugins/{name}/{task}", summary="Run a task on a plugin")
-def run_plugin_task(
-    name: str,
-    task: str,
-    payload: Dict[str, Any],
-    request: Request
-) -> Dict[str, Any]:
+def run_plugin_task(name: str, task: str, payload: Dict[str, Any], request: Request) -> Dict[str, Any]:
     """
     Execute a specific task on a given plugin.
 

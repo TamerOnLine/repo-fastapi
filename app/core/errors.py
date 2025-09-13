@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from jinja2 import TemplateNotFound
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -25,7 +26,6 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
     HTTP_503_SERVICE_UNAVAILABLE,
 )
-from fastapi.templating import Jinja2Templates
 
 from app.core.config import get_settings
 
@@ -114,8 +114,7 @@ def _render(
             html = (
                 f"<h1>{status_code} – {message}</h1>"
                 f"<p><strong>Path:</strong> {payload['path']}</p>"
-                f"<p><strong>Method:</strong> {payload['method']}</p>"
-                + (f"<pre>{details}</pre>" if details else "")
+                f"<p><strong>Method:</strong> {payload['method']}</p>" + (f"<pre>{details}</pre>" if details else "")
             )
             return HTMLResponse(content=html, status_code=status_code)
 

@@ -44,10 +44,7 @@ class Settings(BaseSettings):
     # ================================
     # Device configuration
     # ================================
-    DEVICE: str = Field(
-        default="cuda:0",
-        description="e.g., 'cuda:0', 'cpu', 'mps' (macOS), 'cuda:1', etc."
-    )
+    DEVICE: str = Field(default="cuda:0", description="e.g., 'cuda:0', 'cpu', 'mps' (macOS), 'cuda:1', etc.")
 
     # ================================
     # Model cache paths
@@ -87,12 +84,7 @@ class Settings(BaseSettings):
     # ================================
     # pydantic-settings configuration
     # ================================
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_prefix="APP_",
-        case_sensitive=False,
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", case_sensitive=False, extra="ignore")
 
     # ================================
     # Validators
@@ -114,8 +106,9 @@ class Settings(BaseSettings):
                 return Path(root) / "huggingface" / "hub"
         return Path(v) if isinstance(v, str) else v
 
-    @field_validator("MODEL_CACHE_ROOT", "STATIC_DIR", "TEMPLATES_DIR", "UPLOAD_DIR",
-                     "ERROR_LOG_FILE", "PLUGINS_LOG_FILE")
+    @field_validator(
+        "MODEL_CACHE_ROOT", "STATIC_DIR", "TEMPLATES_DIR", "UPLOAD_DIR", "ERROR_LOG_FILE", "PLUGINS_LOG_FILE"
+    )
     @classmethod
     def ensure_path(cls, v: Path):
         """

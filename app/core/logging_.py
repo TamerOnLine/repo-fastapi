@@ -3,6 +3,7 @@ import sys
 
 from app.core.config import get_settings
 
+
 def setup_logging() -> None:
     """
     Set up logging configuration using the LOG_LEVEL from application settings.

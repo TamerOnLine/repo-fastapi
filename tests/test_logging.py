@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 import sys
@@ -75,9 +75,7 @@ def setup_logging() -> None:
             encoding="utf-8",
         )
         err_fh.setLevel(logging.ERROR)
-        err_fh.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
-        )
+        err_fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s"))
         root.addHandler(err_fh)
 
     # Plugins log file (plugins.* only) if enabled
@@ -91,17 +89,15 @@ def setup_logging() -> None:
             encoding="utf-8",
         )
         pl_fh.setLevel(_level(s.LOG_LEVEL_PLUGINS, logging.INFO))
-        pl_fh.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
-        )
+        pl_fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s"))
         pl_fh.addFilter(StartsWithFilter("plugins"))
         root.addHandler(pl_fh)
 
     # Specific logger configurations
     logging.getLogger("errors").setLevel(logging.ERROR)
-    logging.getLogger("uvicorn.access").setLevel(
-        _level(s.LOG_LEVEL_UVICORN, logging.WARNING)
-    )
+    logging.getLogger("uvicorn.access").setLevel(_level(s.LOG_LEVEL_UVICORN, logging.WARNING))
+
+
 def main() -> None:
     setup_logging()
     logger = logging.getLogger("test_logger")
