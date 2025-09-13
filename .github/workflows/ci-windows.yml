@@ -56,15 +56,16 @@ jobs:
         shell: powershell
         run: |
           $proc = Start-Process -FilePath uvicorn -ArgumentList "app.main:app --host 127.0.0.1 --port 8000" -PassThru
-          python - << 'PY'
-          import time, urllib.request, sys
-          for _ in range(30):
-              try:
-                  with urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=1) as r:
-                      print(r.read())
-                      sys.exit(0)
-              except Exception:
-                  time.sleep(0.5)
-          sys.exit(1)
-          PY
-          if ($proc) { Stop-Process -Id $proc.Id -Force }
+          try {
+            $ok = $false
+            for ($i = 0; $i -lt 30; $i++) {
+              try {
+                $r = Invoke-WebRequest -Uri "http://127.0.0.1:8000/health" -TimeoutSec 1 -UseBasicParsing
+                if ($r.StatusCode -eq 200) { $ok = $true; break }
+              } catch { Start-Sleep -Milliseconds 500 }
+            }
+            if (-not $ok) { exit 1 }
+          } finally {
+            if ($proc) { Stop-Process -Id $proc.Id -Force }
+          }
+
