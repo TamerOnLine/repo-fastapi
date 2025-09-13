@@ -1,5 +1,6 @@
 # tests/test_dummy_live.py
 import os
+
 import pytest
 import requests
 
