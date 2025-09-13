@@ -6,19 +6,19 @@
   <a href="https://pytorch.org/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.6.x-ee4c2c" /></a>
 
   <!-- CI badges -->
-<a href="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-ubuntu.yml">
-  <img alt="Ubuntu CI" src="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-ubuntu.yml/badge.svg" />
-</a>
-<a href="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-macos.yml">
-  <img alt="macOS CI" src="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-macos.yml/badge.svg" />
-</a>
-<a href="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-windows.yml">
-  <img alt="Windows CI" src="https://github.com/TamerOnLine/gpu-server/actions/workflows/ci-windows.yml/badge.svg" />
-</a>
-
+  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml">
+    <img alt="Ubuntu CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-ubuntu.yml/badge.svg" />
+  </a>
+  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml">
+    <img alt="macOS CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-macos.yml/badge.svg" />
+  </a>
+  <a href="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml">
+    <img alt="Windows CI" src="https://github.com/TamerOnLine/repo-fastapi/actions/workflows/ci-windows.yml/badge.svg" />
+  </a>
 
   <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green" /></a>
 </p>
+
 
 
 NeuroServe is an **AI Inference Server** built on **FastAPI** and designed to run seamlessly on **GPU / CPU / ROCm / macOS MPS**.  
