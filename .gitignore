@@ -150,6 +150,7 @@ celerybeat.pid
 # 🧾 user-specific files
 # =========================
 gitingest.txt
+squash_all.py
 *info/
 publish.py
 publish_test.py
